@@ -30,24 +30,24 @@ const aiConfigration = async (req, res, next) => {
 };
 
 const aiGemini = async (req, res) => {
-  //   try {
-  const { text } = req.body;
-  const result = await req.model.generateContent({
-    contents: [
-      {
-        role: "user",
-        parts: [{ text }],
-      },
-    ],
-    generationConfig: req.config,
-  });
+  try {
+    const { text } = req.body;
+    const result = await req.model.generateContent({
+      contents: [
+        {
+          role: "user",
+          parts: [{ text }],
+        },
+      ],
+      generationConfig: req.config,
+    });
 
-  return res
-    .status(200)
-    .json({ status: "success", data: result.response.text() });
-  //   } catch (error) {
-  //     return res.status(401).json({ status: "fail", err: error });
-  //   }
+    return res
+      .status(200)
+      .json({ status: "success", data: result.response.text() });
+  } catch (error) {
+    return res.status(401).json({ status: "fail", err: error });
+  }
 };
 
 // const aiGeminiFile = async (req, res) => {

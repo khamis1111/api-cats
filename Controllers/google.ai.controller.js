@@ -1,7 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { GoogleAIFileManager } = require("@google/generative-ai/server");
-const fs = require("fs");
-const path = require("path");
+// const fs = require("fs");
+// const path = require("path");
 
 const aiConfigration = async (req, res, next) => {
   try {
@@ -36,7 +36,7 @@ const aiGemini = async (req, res) => {
       contents: [
         {
           role: "user",
-          parts: [{ text }],
+          parts: [{ text: text }],
         },
       ],
       generationConfig: req.config,
@@ -53,10 +53,13 @@ const aiGemini = async (req, res) => {
 const aiGeminiFile = async (req, res) => {
   const { text } = req.body;
   const file = req.file;
-  const fileManager = new GoogleAIFileManager(process.env.GOOGLE_API_KEY); // Use environment variable for API key
+  const fileManager = new GoogleAIFileManager(
+    "AIzaSyAw3fuaejoPbR6t3lEoI5TbxhOF1iVp_Gs"
+  );
   let files;
 
   if (file) {
+    // Function to upload file to Gemini
     async function uploadToGemini(path, mimeType) {
       try {
         const uploadResult = await fileManager.uploadFile(path, {
@@ -75,6 +78,7 @@ const aiGeminiFile = async (req, res) => {
       }
     }
 
+    // Wait for files to be processed and active
     async function waitForFilesActive(files) {
       console.log("Waiting for file processing...");
       for (const name of files.map((file) => file.name)) {
@@ -94,19 +98,14 @@ const aiGeminiFile = async (req, res) => {
       console.log("...all files ready\n");
     }
 
+    // Upload the image file
     const uploadedFile = await uploadToGemini(file.path, file.mimetype);
-    if (!uploadedFile) return; // Stop execution if file upload failed
     files = [uploadedFile];
+
+    // Wait for the file to be ready for processing
     await waitForFilesActive(files);
   }
-
-  if (!req.model || !req.config) {
-    return res.status(400).json({
-      status: "fail",
-      err: "Model or configuration missing.",
-    });
-  }
-
+  // Initiate the chat session with uploaded file and user text
   const chatSession = req.model.startChat({
     generationConfig: req.config,
     history: [
@@ -131,37 +130,48 @@ const aiGeminiFile = async (req, res) => {
     ],
   });
 
+  // Send the user-provided text to the chat session
   const result = await chatSession.sendMessage(text);
-  if (result && result.response && result.response.text()) {
-    return res.status(200).json({
-      status: "success",
-      data: result.response.text(),
-    });
-  } else {
-    return res.status(500).json({
-      status: "fail",
-      err: "Failed to get a valid response from the AI.",
-    });
-  }
+  console.log(result.response.text());
 
-  // File deletion
-  const deleteFilesInUploads = async () => {
-    const uploadsDir = path.resolve("uploads");
-    try {
-      const files = await fs.promises.readdir(uploadsDir);
-      for (const file of files) {
-        const filePath = path.join(uploadsDir, file);
-        await fs.promises.unlink(filePath);
-        console.log(`File deleted: ${filePath}`);
-      }
-    } catch (error) {
-      return res.status(401).json({
-        status: "fail",
-        err: `Error deleting files: ${error}`,
-      });
-    }
-  };
-  await deleteFilesInUploads();
+  // const deleteFilesInUploads = () => {
+  //   const uploadsDir = path.resolve("uploads"); // Specify the uploads directory
+
+  //   // Read the files in the 'uploads' directory
+  //   fs.readdir(uploadsDir, (error, files) => {
+  //     if (error) {
+  //       return res.status(401).json({
+  //         status: "fail",
+  //         err: `Error reading the directory: ${error}`,
+  //       });
+  //     }
+
+  //     // Loop through each file and delete it
+  //     files.forEach((file) => {
+  //       const filePath = path.join(uploadsDir, file);
+
+  //       // Delete the file
+  //       fs.unlink(filePath, (err) => {
+  //         if (err) {
+  //           return res.status(401).json({
+  //             status: "fail",
+  //             err: `Error deleting file: ${filePath}, ${err}`,
+  //           });
+  //         } else {
+  //           console.log(`File deleted: ${filePath}`);
+  //         }
+  //       });
+  //     });
+  //   });
+  // };
+
+  // // Call the function to delete files
+  // deleteFilesInUploads();
+
+  // Respond with AI response
+  return res
+    .status(200)
+    .json({ status: "success", data: result.response.text() });
 };
 
-module.exports = { aiConfigration, aiGemini, aiGeminiFile };
+module.exports = { aiConfigration, aiGeminiFile };

@@ -4,7 +4,7 @@ const {
   aiGemini,
   aiGeminiFile,
 } = require("../Controllers/google.ai.controller");
-// const { uploadFile } = require("../middleware/multer");
+const { uploadFile } = require("../middleware/multer");
 
 const router = express.Router();
 

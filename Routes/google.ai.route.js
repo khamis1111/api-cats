@@ -10,6 +10,6 @@ const router = express.Router();
 router
   .route("/generate")
   // .post(aiConfigration, uploadFile.single("file"), aiGeminiFile);
-  .post(aiConfigration, uploadFile.single("file"), aiGemini);
+  .post(aiConfigration, aiGemini);
 
 module.exports = router;

@@ -1,5 +1,5 @@
 const express = require("express");
-const googleAiRoute = require("./Routes/google.ai.route");
+// const googleAiRoute = require("./Routes/google.ai.route");
 const app = express();
 
 // Body-Parser POST
@@ -16,7 +16,7 @@ app.listen(3000, () => console.log("Working..."));
 // Router
 const router = require("./Routes/CatRouter");
 app.use("/", router);
-app.use("/api/v1/", googleAiRoute);
+// app.use("/api/v1/", googleAiRoute);
 
 // JWT => Json Web Token
 let jwt = require("jsonwebtoken");
